@@ -1,30 +1,47 @@
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
-
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AgGridReact } from "ag-grid-react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
 
 function Grid() {
-  let { selected } = useParams();
-  const usersHeader = ["id", "email", "password", "name", "role"];
-  const [users, setUsers] = React.useState(null);
-  const baseURL = "https://api.escuelajs.co/api/v1/";
+  const [gridApi, setGridApi] = useState(null);
+  const [columnDefs, setColumnDefs] = useState([]);
+  const [rowData, setRowData] = useState([]);
+  let { dataSet } = useParams();
   useEffect(() => {
-    axios.get(baseURL + "users").then((response) => {
-      setUsers(response.data);
-    });
-  }, []);
-  if (!users) return <h1>error</h1>;
-  console.log(selected + "-----------");
+    alert(dataSet);
+    fetch(`https://jsonplaceholder.typicode.com/${dataSet}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setColumnDefs(data.columns);
+        setRowData(data.rows);
+      });
+  }, [dataSet]);
+
+  const onGridReady = (params) => {
+    setGridApi(params.api);
+    params.api.sizeColumnsToFit();
+  };
+
+  const onSortChanged = () => {
+    gridApi.refreshCells();
+  };
+
   return (
-    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
-      {/* <AgGridReact rowData={users} columnDefs={usersHeader}></AgGridReact> */}
-      {users.map((user, key) => (
-        <h1>{user["name"]}</h1>
-      ))}
+    <div
+      className="ag-theme-material"
+      style={{ height: "500px", width: "100%" }}
+    >
+      <AgGridReact
+        columnDefs={columnDefs}
+        rowData={rowData}
+        onGridReady={onGridReady}
+        onSortChanged={onSortChanged}
+        pagination={true}
+        paginationPageSize={10}
+        enableSorting={true}
+        enableFilter={true}
+      />
     </div>
   );
 }
